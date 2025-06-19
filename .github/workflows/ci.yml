@@ -43,7 +43,9 @@ jobs:
         run: npm run build
 
       - name: "🎭 Playwright Tests"
-        run: npx playwright test
+        run: |
+          npm run dev &
+          npx playwright test
 
       - name: "📊 Upload Test Report"
         if: always()
