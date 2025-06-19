@@ -1,0 +1,91 @@
+{
+  "id": 8,
+  "title": "P-1: 智能输入解析与意图分析 (Intent Parsing & Analysis Feature)",
+  "description": "Contract-driven epic to enable intelligent input parsing and intent analysis across backend and frontend.",
+  "details": "Implements preprocessing, LLM-based intent detection, external product fetching, API endpoint, frontend state/UI, and complete test coverage.",
+  "testStrategy": "All child subtasks' unit, integration, and E2E tests must pass in CI.",
+  "status": "in-progress",
+  "dependencies": [2, 3, 4],
+  "priority": "high",
+  "subtasks": [
+    {
+      "id": "8.1",
+      "title": "更新 openapi.yml 定义 /api/v1/intent/parse 端点",
+      "details": "Add POST /api/v1/intent/parse with request body schema { userInput: string } and structured success/error responses as per PRD.",
+      "testStrategy": "Run openapi-cli validate to pass without errors.",
+      "status": "done"
+    },
+    {
+      "id": "8.2",
+      "title": "实现 preprocess_input 纯函数并编写单元测试",
+      "details": "Create app/services/preprocessor.py with URL extraction, text separation, decision logic skip_llm flag.",
+      "testStrategy": "Pytest cases covering link-only, mixed, and text-only scenarios.",
+      "status": "done",
+      "dependencies": ["8.1"]
+    },
+    {
+      "id": "8.3",
+      "title": "封装 llm_service.get_shopping_intent 并环境变量配置",
+      "details": "Move provided AsyncOpenAI code into app/services/llm_service.py with robust error handling and dependency injection for easier testing.",
+      "testStrategy": "Unit tests mocking OpenAI client to validate JSON parsing and fallback behaviour.",
+      "status": "done",
+      "dependencies": ["8.2"]
+    },
+    {
+      "id": "8.4",
+      "title": "实现 daji_service 与 weidian_service Stub",
+      "details": "Create service modules to fetch product details given IDs/URLs with httpx; include timeout and retry; provide fake data fallback for development.",
+      "testStrategy": "Unit tests mocking HTTP responses.",
+      "status": "done",
+      "dependencies": ["8.2"]
+    },
+    {
+      "id": "8.5",
+      "title": "实现 /api/v1/intent/parse FastAPI 路由",
+      "details": "Integrate preprocessor, llm_service, external services; implement rate limiting (simple in-memory) and standardized JSON response.",
+      "testStrategy": "Integration tests using httpx AsyncClient with mocked external calls for 200 and 429 paths.",
+      "status": "done",
+      "dependencies": ["8.3", "8.4"]
+    },
+    {
+      "id": "8.6",
+      "title": "编写后端集成测试",
+      "details": "Cover scenarios: URL with product, text intent true/false, rate limit exceed.",
+      "testStrategy": "Pytest with pytest-mock; >90% coverage.",
+      "status": "done",
+      "dependencies": ["8.5"]
+    },
+    {
+      "id": "8.7",
+      "title": "创建 frontend/useIntentStore (Zustand)",
+      "details": "Async action parseIntent calling backend and managing isLoading, data, error states.",
+      "testStrategy": "Vitest unit tests mocking fetch API.",
+      "status": "done",
+      "dependencies": ["8.5"]
+    },
+    {
+      "id": "8.8",
+      "title": "实现 IntentInputForm UI 组件",
+      "details": "AntD TextArea + Button, show loading spinner, product card or message.",
+      "testStrategy": "Storybook stories and visual regression tests.",
+      "status": "done",
+      "dependencies": ["8.7"]
+    },
+    {
+      "id": "8.9",
+      "title": "前端单元测试覆盖 store 与组件",
+      "details": "Vitest react-testing-library to assert render and state transitions.",
+      "testStrategy": ">90% statements coverage for store/component files.",
+      "status": "pending",
+      "dependencies": ["8.8"]
+    },
+    {
+      "id": "8.10",
+      "title": "端到端测试：Intent 解析流程",
+      "details": "Playwright script: input Taobao link -> expect product card; input non-shopping text -> expect no shopping message.",
+      "testStrategy": "Playwright CI run must pass on GitHub Actions.",
+      "status": "pending",
+      "dependencies": ["8.9"]
+    }
+  ]
+} 

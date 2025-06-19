@@ -1,0 +1,14 @@
+{
+	"name": "shopping-assistant-monorepo",
+	"private": true,
+	"version": "0.1.0",
+	"workspaces": [
+		"backend"
+	],
+	"scripts": {
+		"dev:backend": "uvicorn backend.main:app --reload"
+	},
+	"dependencies": {
+		"openai": "^5.5.1"
+	}
+}
