@@ -6,6 +6,10 @@ import type { Product } from '@/types';
 const openrouter = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
   apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    'HTTP-Referer': 'https://github.com/ayayo888/shopping-assistant',
+    'X-Title': 'Shopping Assistant',
+  },
 });
 
 const systemPrompt = `
