@@ -1,17 +1,17 @@
 "use client";
 
-import { useIntentStore } from "@/stores/useIntentStore";
+import { useState } from "react";
 import {
   Button,
-  Card,
-  Form,
   Input,
+  Card,
   Typography,
   Space,
   Spin,
   Alert,
   Image,
 } from "antd";
+import { useIntentStore } from "@/stores/useIntentStore";
 import type { Product } from "@/types";
 
 const { TextArea } = Input;
@@ -31,7 +31,6 @@ const ProductCard = ({ product }: { product: Product }) => (
   </Card>
 );
 
-
 export const IntentInputForm = () => {
   const {
     userInput,
@@ -42,17 +41,20 @@ export const IntentInputForm = () => {
     parseIntent,
     clearError,
   } = useIntentStore();
+  
+  const [internalUserInput, setInternalUserInput] = useState(userInput);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setUserInput(e.target.value);
+    setInternalUserInput(e.target.value);
     if (error) {
       clearError();
     }
   };
 
   const handleSubmit = () => {
-    if (!userInput.trim()) return;
-    parseIntent(userInput);
+    if (!internalUserInput.trim()) return;
+    setUserInput(internalUserInput);
+    parseIntent(internalUserInput);
   };
 
   return (
@@ -64,7 +66,7 @@ export const IntentInputForm = () => {
         <Card>
           <Space direction="vertical" style={{ width: "100%" }}>
             <TextArea
-              value={userInput}
+              value={internalUserInput}
               onChange={handleInputChange}
               placeholder="例如：https://item.taobao.com/item.htm?id=..."
               rows={4}
@@ -73,7 +75,7 @@ export const IntentInputForm = () => {
             <Button
               type="primary"
               onClick={handleSubmit}
-              disabled={isLoading || !userInput.trim()}
+              disabled={isLoading || !internalUserInput.trim()}
               data-testid="submit-button"
             >
               分析意图
@@ -105,6 +107,9 @@ export const IntentInputForm = () => {
          </div>
       )}
 
+       {/* This logic was slightly flawed. It would show "no intent" right after a successful search if the user cleared the input. 
+           Let's only show this message if a search has been completed (so userInput is not empty) but no products were found.
+       */}
       {products.length === 0 && !isLoading && !error && userInput && (
           <div data-testid="no-product-message">
               <Text>未识别到明确的购物意图。</Text>
