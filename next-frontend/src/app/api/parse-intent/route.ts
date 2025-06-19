@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     }
 
     const completion = await openrouter.chat.completions.create({
-      model: 'mistralai/mixtral-8x7b-instruct',
+      model: 'openai/gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text },

@@ -27,11 +27,9 @@ export const useIntentStore = create<IntentState>((set) => ({
 
       const data: Product[] = await response.json();
       
-      set({ products: data });
+      set({ products: data, isLoading: false });
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : 'An unknown error occurred' });
-    } finally {
-      set({ isLoading: false });
+      set({ error: err instanceof Error ? err.message : 'An unknown error occurred', isLoading: false });
     }
   },
 })); 
