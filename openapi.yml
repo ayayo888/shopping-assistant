@@ -1,0 +1,179 @@
+openapi: 3.0.3
+info:
+  title: Intelligent Shopping Assistant API
+  version: 0.1.0
+  description: >-
+    Centralized API contract (Single Source of Truth) for the Intelligent Shopping
+    Assistant System.  All backend services **must** conform to this specification
+    and all frontend calls **must** rely on the documented request / response
+    formats.
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      description: Returns 200 OK if the service is healthy.
+      responses:
+        "200":
+          description: Service is healthy
+
+  /api/v1/intent/parse:
+    post:
+      summary: Parse user input and detect shopping intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userInput
+              properties:
+                userInput:
+                  type: string
+                  description: Raw text the user entered (may contain URLs).
+      responses:
+        "200":
+          description: Parsed result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsedIntentResponse'
+        "429":
+          description: Rate-limited or LLM quota exceeded
+
+  /api/v1/products/qc:
+    get:
+      summary: Get QC (Quality Control) image gallery for a product
+      parameters:
+        - in: query
+          name: platform
+          required: true
+          schema:
+            type: string
+            enum: [taobao, weidian, 1688, tencent]
+          description: E-commerce platform identifier
+        - in: query
+          name: product_id
+          required: true
+          schema:
+            type: string
+          description: Platform-specific product ID
+      responses:
+        "200":
+          description: QC gallery found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QCGalleryResponse'
+        "404":
+          description: Gallery not found
+
+  /api/v1/search/image:
+    post:
+      summary: Search products by image across multiple platforms
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The image file to search with
+      responses:
+        "200":
+          description: Aggregated search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageSearchResponse'
+        "400":
+          description: Invalid image file or unsupported format
+
+components:
+  schemas:
+    ParsedIntentResponse:
+      type: object
+      properties:
+        hasUrls:
+          type: boolean
+          description: Whether at least one product URL was detected.
+        urls:
+          type: array
+          items:
+            type: string
+          description: List of extracted product URLs (if any).
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+          description: Detailed product info if URLs were parsed successfully.
+        llmAnalysis:
+          type: string
+          description: Free-form user intent description returned by LLM when no URL is present.
+      required:
+        - hasUrls
+
+    QCGalleryResponse:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/Product'
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Direct URLs of QC images in preferred order.
+      required:
+        - product
+        - images
+
+    ImageSearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSearchResult'
+      required:
+        - results
+
+    Product:
+      type: object
+      properties:
+        platform:
+          type: string
+          enum: [taobao, weidian, 1688]
+        productId:
+          type: string
+        title:
+          type: string
+        price:
+          type: number
+          format: float
+        url:
+          type: string
+          format: uri
+
+    ProductSearchResult:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          properties:
+            finalScore:
+              type: number
+              format: float
+              description: Aggregated ranking score (higher = better)
+            reliabilityScore:
+              type: number
+              format: float
+            similarityScore:
+              type: number
+              format: float 
